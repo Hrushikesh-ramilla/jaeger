@@ -20,6 +20,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/jaegertracing/jaeger-idl/model/v1"
+	"github.com/jaegertracing/jaeger/cmd/jaeger/internal/extension/jaegerquery/internal/httpjson"
 	"github.com/jaegertracing/jaeger/cmd/jaeger/internal/extension/jaegerquery/querysvc"
 	"github.com/jaegertracing/jaeger/components/extension/jaegerquery/queryinterceptor"
 	"github.com/jaegertracing/jaeger/internal/jiter"
@@ -100,8 +101,7 @@ func (h *HTTPGateway) tryHandleError(w http.ResponseWriter, err error, statusCod
 			Message:  err.Error(),
 		},
 	}
-	resp, _ := json.Marshal(&errorResponse)
-	http.Error(w, string(resp), statusCode)
+	httpjson.WriteError(w, statusCode, &errorResponse)
 	return true
 }
 
@@ -132,8 +132,7 @@ func (h *HTTPGateway) returnTraces(traces []ptrace.Traces, err error, w http.Res
 				Message:  "No traces found",
 			},
 		}
-		resp, _ := json.Marshal(&errorResponse)
-		http.Error(w, string(resp), http.StatusNotFound)
+		httpjson.WriteError(w, http.StatusNotFound, &errorResponse)
 		return
 	}
 	// TODO: the response should be streamed back to the client

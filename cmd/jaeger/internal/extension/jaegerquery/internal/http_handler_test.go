@@ -916,3 +916,17 @@ func TestGetTraceWithNonFiniteDoubleAttribute(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleErrorWritesJSONContentType(t *testing.T) {
+	h := NewAPIHandler(nil)
+	w := httptest.NewRecorder()
+	w.Header().Set("Content-Length", "10")
+
+	assert.True(t, h.handleError(w, errors.New("test error"), http.StatusBadRequest))
+
+	assert.Empty(t, w.Header().Get("Content-Length"))
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+	assert.Equal(t, "nosniff", w.Header().Get("X-Content-Type-Options"))
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.JSONEq(t, `{"data":null,"errors":[{"code":400,"msg":"test error"}],"total":0,"limit":0,"offset":0}`, w.Body.String())
+}

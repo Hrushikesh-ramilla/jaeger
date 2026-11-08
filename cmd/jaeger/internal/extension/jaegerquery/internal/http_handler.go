@@ -6,7 +6,6 @@ package app
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -22,6 +21,7 @@ import (
 	"github.com/jaegertracing/jaeger-idl/model/v1"
 	"github.com/jaegertracing/jaeger/cmd/jaeger/internal/extension/jaegerquery/internal/apiv3"
 	deepdependencies "github.com/jaegertracing/jaeger/cmd/jaeger/internal/extension/jaegerquery/internal/ddg"
+	"github.com/jaegertracing/jaeger/cmd/jaeger/internal/extension/jaegerquery/internal/httpjson"
 	"github.com/jaegertracing/jaeger/cmd/jaeger/internal/extension/jaegerquery/internal/qualitymetrics"
 	"github.com/jaegertracing/jaeger/cmd/jaeger/internal/extension/jaegerquery/querysvc"
 	"github.com/jaegertracing/jaeger/internal/proto-gen/api_v2/metrics"
@@ -395,8 +395,7 @@ func (aH *APIHandler) handleError(w http.ResponseWriter, err error, statusCode i
 			},
 		},
 	}
-	resp, _ := json.Marshal(&structuredResp)
-	http.Error(w, string(resp), statusCode)
+	httpjson.WriteError(w, statusCode, &structuredResp)
 	return true
 }
 

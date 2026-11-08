@@ -108,7 +108,11 @@ func TestHTTPGatewayTryHandleError(t *testing.T) {
 	assert.False(t, gw.tryHandleError(nil, nil, 0), "returns false if no error")
 
 	w := httptest.NewRecorder()
+	w.Header().Set("Content-Length", "10")
 	assert.True(t, gw.tryHandleError(w, spanstore.ErrTraceNotFound, 0), "returns true if error")
+	assert.Empty(t, w.Header().Get("Content-Length"))
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+	assert.Equal(t, "nosniff", w.Header().Get("X-Content-Type-Options"))
 	assert.Equal(t, http.StatusNotFound, w.Code, "sets status code to 404")
 
 	// A well-formed query this deployment's storage cannot serve is a missing capability, not
@@ -310,6 +314,8 @@ func TestHTTPGatewayGetTraceEmptyResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	gw.router.ServeHTTP(w, r)
 	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+	assert.Equal(t, "nosniff", w.Header().Get("X-Content-Type-Options"))
 	assert.Contains(t, w.Body.String(), "No traces found")
 }
 
